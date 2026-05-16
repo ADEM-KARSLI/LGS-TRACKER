@@ -21,7 +21,7 @@ export function CriticalAccordion({ tree }: { tree: PendingTree }) {
           subject: subjectNode.subject,
           topic: topicNode.topic,
           testNo: testNode.test.test_no,
-          source: `${testNode.test.source} · Test ${testNode.test.test_no}`,
+          source: testNode.test.source,
           questionNo: question.question_no,
           status: question.status,
         }))
