@@ -6,6 +6,7 @@ type CriticalQuestionRow = {
   id: string;
   subject: string;
   topic: string;
+  testNo: number;
   source: string;
   questionNo: number;
   status: WeakQuestion["status"];
@@ -19,6 +20,7 @@ export function CriticalAccordion({ tree }: { tree: PendingTree }) {
           id: question.id,
           subject: subjectNode.subject,
           topic: topicNode.topic,
+          testNo: testNode.test.test_no,
           source: `${testNode.test.source} · Test ${testNode.test.test_no}`,
           questionNo: question.question_no,
           status: question.status,
@@ -49,6 +51,9 @@ export function CriticalAccordion({ tree }: { tree: PendingTree }) {
               </td>
               <td className="px-4 py-4 text-slate-800 dark:text-slate-100">
                 <div className="font-medium">{row.topic}</div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Test {row.testNo}
+                </div>
               </td>
               <td className="px-4 py-4 text-slate-800 dark:text-slate-100">{row.questionNo}</td>
               <td className="px-4 py-4 text-slate-800 dark:text-slate-100">

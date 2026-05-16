@@ -1,0 +1,21 @@
+name: Vercel Automatic Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel
+        uses: vercel/action@v3
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: team_9M9dkCOSRf4DPcCcod8b2drm
+          vercel-project-id: prj_tT3qpEhox9IzxLYxGNcCO191WuZd
+          vercel-args: '--prod'

@@ -8,6 +8,7 @@ type PendingQuestionRow = {
   id: string;
   subject: string;
   topic: string;
+  testNo: number;
   source: string;
   questionNo: number;
   questionId: string;
@@ -23,6 +24,7 @@ export function PendingAccordion({ tree }: { tree: PendingTree }) {
           id: `${question.id}-${subjectNode.subject}-${topicNode.topic}`,
           subject: subjectNode.subject,
           topic: topicNode.topic,
+          testNo: testNode.test.test_no,
           source: `${testNode.test.source} · Test ${testNode.test.test_no}`,
           questionNo: question.question_no,
           questionId: question.id,
@@ -54,6 +56,9 @@ export function PendingAccordion({ tree }: { tree: PendingTree }) {
                 </td>
                 <td className="px-4 py-4 text-slate-800 dark:text-slate-100">
                   <div className="font-medium">{row.topic}</div>
+                  <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Test {row.testNo}
+                  </div>
                 </td>
                 <td className="px-4 py-4 text-slate-800 dark:text-slate-100">
                   {row.questionNo}
