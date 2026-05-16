@@ -29,6 +29,12 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Custom Tool: generate_study_advice
+
+This repository includes a Python tool implementation for the course assignment under `backend/tools/`.
+The `generate_study_advice` tool returns a short study recommendation based on a lesson name and the number of wrong answers.
+It is designed to integrate with an LLM agent workflow for a learning tracker project.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
