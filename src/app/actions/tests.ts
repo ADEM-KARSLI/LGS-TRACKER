@@ -10,6 +10,8 @@ export type TestFormState = {
   success?: string;
 };
 
+const CUSTOM_SOURCE_VALUE = "__custom__";
+
 function parseWrongQuestions(raw: string, totalQuestions: number): number[] {
   if (!raw.trim()) return [];
 
@@ -20,9 +22,7 @@ function parseWrongQuestions(raw: string, totalQuestions: number): number[] {
     .map((s) => parseInt(s, 10));
 
   if (numbers.some((n) => Number.isNaN(n) || n < 1 || n > totalQuestions)) {
-    throw new Error(
-      `Soru numaraları 1 ile ${totalQuestions} arasında olmalıdır.`
-    );
+    throw new Error(`Soru numaraları 1 ile ${totalQuestions} arasında olmalıdır.`);
   }
 
   return [...new Set(numbers)].sort((a, b) => a - b);
@@ -37,7 +37,10 @@ export async function createTest(
 
   const subject = String(formData.get("subject") ?? "").trim();
   const topic = String(formData.get("topic") ?? "").trim();
-  const source = String(formData.get("source") ?? "").trim();
+  const selectedSource = String(formData.get("source") ?? "").trim();
+  const customSource = String(formData.get("custom_source") ?? "").trim();
+  const source =
+    selectedSource === CUSTOM_SOURCE_VALUE ? customSource : selectedSource;
   const testNo = parseInt(String(formData.get("test_no") ?? ""), 10);
   const totalQuestions = parseInt(String(formData.get("total_questions") ?? ""), 10);
   const wrongRaw = String(formData.get("wrong_questions") ?? "").trim();
@@ -46,7 +49,12 @@ export async function createTest(
     return { error: "Ders, konu ve kaynak zorunludur." };
   }
 
-  if (Number.isNaN(testNo) || Number.isNaN(totalQuestions) || testNo < 1 || totalQuestions < 1) {
+  if (
+    Number.isNaN(testNo) ||
+    Number.isNaN(totalQuestions) ||
+    testNo < 1 ||
+    totalQuestions < 1
+  ) {
     return { error: "Test no ve toplam soru sayısını kontrol edin." };
   }
 

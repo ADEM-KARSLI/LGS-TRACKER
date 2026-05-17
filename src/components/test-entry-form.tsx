@@ -12,15 +12,32 @@ import { useActionState, useMemo, useState } from "react";
 const initialState: TestFormState = {};
 const defaultSubject = LGS_SUBJECTS[0];
 const defaultTopics = getTopicsForSubject(defaultSubject);
+const CUSTOM_SOURCE_VALUE = "__custom__";
 
-export function TestEntryForm() {
+export function TestEntryForm({
+  existingSources,
+}: {
+  existingSources: string[];
+}) {
   const [state, formAction, isPending] = useActionState(createTest, initialState);
   const [subject, setSubject] = useState(defaultSubject);
   const [topic, setTopic] = useState(defaultTopics[0] ?? "");
   const [totalQuestions, setTotalQuestions] = useState(15);
   const [wrongSet, setWrongSet] = useState<Set<number>>(new Set());
+  const [selectedSource, setSelectedSource] = useState(
+    existingSources[0] ?? CUSTOM_SOURCE_VALUE
+  );
+  const [customSource, setCustomSource] = useState("");
 
   const topics = useMemo(() => getTopicsForSubject(subject), [subject]);
+  const sourceOptions = useMemo(
+    () => [
+      ...existingSources.map((source) => ({ value: source, label: source })),
+      { value: CUSTOM_SOURCE_VALUE, label: "Yeni kaynak ekle" },
+    ],
+    [existingSources]
+  );
+  const isCustomSource = selectedSource === CUSTOM_SOURCE_VALUE;
 
   function handleSubjectChange(nextSubject: string) {
     setSubject(nextSubject);
@@ -69,7 +86,24 @@ export function TestEntryForm() {
           onChange={(e) => setTopic(e.target.value)}
           options={topics.map((t) => ({ value: t, label: t }))}
         />
-        <Input name="source" label="Kaynak" required placeholder="Örn: Karekök 8. Sınıf" />
+        <Select
+          name="source"
+          label="Kaynak"
+          required
+          value={selectedSource}
+          onChange={(e) => setSelectedSource(e.target.value)}
+          options={sourceOptions}
+        />
+        {isCustomSource && (
+          <Input
+            name="custom_source"
+            label="Yeni Kaynak"
+            required
+            value={customSource}
+            onChange={(e) => setCustomSource(e.target.value)}
+            placeholder="Örn: Karekök 8. Sınıf"
+          />
+        )}
         <Input name="test_no" label="Test No" type="number" min={1} required />
         <Input
           name="total_questions"
@@ -96,7 +130,7 @@ export function TestEntryForm() {
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Kaydediliyor…" : "Testi Kaydet"}
+          {isPending ? "Kaydediliyor..." : "Testi Kaydet"}
         </Button>
         <Link href="/dashboard">
           <Button type="button" variant="secondary">

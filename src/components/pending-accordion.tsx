@@ -38,10 +38,10 @@ export function PendingAccordion({ tree }: { tree: PendingTree }) {
       <table className="min-w-full border-collapse text-left text-sm">
         <thead className="bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
           <tr>
-            <th className="px-4 py-3 font-semibold">Ders (Kaynak)</th>
-            <th className="px-4 py-3 font-semibold">Konu (Test No)</th>
-            <th className="px-4 py-3 font-semibold">Soru No</th>
-            <th className="px-4 py-3 font-semibold">Güncelle</th>
+            <th className="w-[28%] px-4 py-3 font-semibold">Ders</th>
+            <th className="w-[32%] px-4 py-3 font-semibold">Konu</th>
+            <th className="w-[20%] px-4 py-3 font-semibold">Soru Numarası</th>
+            <th className="w-[20%] px-4 py-3 font-semibold">Güncelle</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-950">
@@ -61,13 +61,17 @@ export function PendingAccordion({ tree }: { tree: PendingTree }) {
                   </div>
                 </td>
                 <td className="px-4 py-4 text-slate-800 dark:text-slate-100">
-                  {row.questionNo}
+                  Soru {row.questionNo}
                 </td>
                 <td className="px-4 py-4 text-slate-800 dark:text-slate-100">
                   <button
                     type="button"
                     className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                    onClick={() => setOpenQuestionId(openQuestionId === row.questionId ? null : row.questionId)}
+                    onClick={() =>
+                      setOpenQuestionId(
+                        openQuestionId === row.questionId ? null : row.questionId
+                      )
+                    }
                   >
                     Güncelle
                   </button>
@@ -75,8 +79,11 @@ export function PendingAccordion({ tree }: { tree: PendingTree }) {
               </tr>
               {openQuestionId === row.questionId && (
                 <tr className="bg-slate-50 dark:bg-slate-900">
-                  <td colSpan={5} className="px-4 py-4">
-                    <QuestionReviewFlow questionId={row.questionId} questionNo={row.questionNo} />
+                  <td colSpan={4} className="px-4 py-4">
+                    <QuestionReviewFlow
+                      questionId={row.questionId}
+                      questionNo={row.questionNo}
+                    />
                   </td>
                 </tr>
               )}
