@@ -4,6 +4,7 @@ import { submitQuestionReview } from "@/app/actions/questions";
 import { Button } from "@/components/ui/button";
 import type { ReviewOutcome } from "@/types/database";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 type QuestionReviewFlowProps = {
   questionId: string;
@@ -11,6 +12,7 @@ type QuestionReviewFlowProps = {
 };
 
 export function QuestionReviewFlow({ questionId, questionNo }: QuestionReviewFlowProps) {
+  const router = useRouter();
   const [outcome, setOutcome] = useState<ReviewOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -29,7 +31,12 @@ export function QuestionReviewFlow({ questionId, questionNo }: QuestionReviewFlo
 
     startTransition(async () => {
       const result = await submitQuestionReview(questionId, outcome);
-      if (result?.error) setError(result.error);
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+
+      router.refresh();
     });
   }
 
