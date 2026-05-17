@@ -34,10 +34,10 @@ export function CriticalAccordion({ tree }: { tree: PendingTree }) {
       <table className="min-w-full border-collapse text-left text-sm">
         <thead className="bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
           <tr>
-            <th className="px-4 py-3 font-semibold">Ders (Kaynak)</th>
-            <th className="px-4 py-3 font-semibold">Konu (Test No)</th>
-            <th className="px-4 py-3 font-semibold">Soru No</th>
-            <th className="px-4 py-3 font-semibold">Kritik</th>
+            <th className="w-[28%] px-4 py-3 font-semibold">Ders</th>
+            <th className="w-[32%] px-4 py-3 font-semibold">Konu</th>
+            <th className="w-[20%] px-4 py-3 font-semibold">Soru Numarası</th>
+            <th className="w-[20%] px-4 py-3 font-semibold">Kritik</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-950">
@@ -55,7 +55,9 @@ export function CriticalAccordion({ tree }: { tree: PendingTree }) {
                   Test {row.testNo}
                 </div>
               </td>
-              <td className="px-4 py-4 text-slate-800 dark:text-slate-100">{row.questionNo}</td>
+              <td className="px-4 py-4 text-slate-800 dark:text-slate-100">
+                Soru {row.questionNo}
+              </td>
               <td className="px-4 py-4 text-slate-800 dark:text-slate-100">
                 <span
                   className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
@@ -74,4 +76,3 @@ export function CriticalAccordion({ tree }: { tree: PendingTree }) {
     </div>
   );
 }
-
