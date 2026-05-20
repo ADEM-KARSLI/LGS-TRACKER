@@ -7,42 +7,108 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { getTopicsForSubject, LGS_SUBJECTS } from "@/lib/lgs-curriculum";
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 
 const initialState: TestFormState = {};
-const defaultSubject = LGS_SUBJECTS[0];
-const defaultTopics = getTopicsForSubject(defaultSubject);
 const CUSTOM_SOURCE_VALUE = "__custom__";
 
 export function TestEntryForm({
   existingSources,
+  studentResources,
 }: {
   existingSources: string[];
+  studentResources: { subject: string; topic: string; source: string }[];
 }) {
   const [state, formAction, isPending] = useActionState(createTest, initialState);
-  const [subject, setSubject] = useState(defaultSubject);
-  const [topic, setTopic] = useState(defaultTopics[0] ?? "");
   const [totalQuestions, setTotalQuestions] = useState(15);
   const [wrongSet, setWrongSet] = useState<Set<number>>(new Set());
-  const [selectedSource, setSelectedSource] = useState(
-    existingSources[0] ?? CUSTOM_SOURCE_VALUE
-  );
+  const [subject, setSubject] = useState("");
+  const [topic, setTopic] = useState("");
+  const [selectedSource, setSelectedSource] = useState("");
   const [customSource, setCustomSource] = useState("");
 
-  const topics = useMemo(() => getTopicsForSubject(subject), [subject]);
-  const sourceOptions = useMemo(
-    () => [
-      ...existingSources.map((source) => ({ value: source, label: source })),
-      { value: CUSTOM_SOURCE_VALUE, label: "Yeni kaynak ekle" },
-    ],
-    [existingSources]
+  const hasResources = studentResources.length > 0;
+
+  const resourceSubjects = useMemo(
+    () => Array.from(new Set(studentResources.map((resource) => resource.subject))),
+    [studentResources]
   );
-  const isCustomSource = selectedSource === CUSTOM_SOURCE_VALUE;
+
+  const resourceTopics = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          studentResources
+            .filter((resource) => resource.subject === subject)
+            .map((resource) => resource.topic)
+        )
+      ),
+    [studentResources, subject]
+  );
+
+  const resourceSources = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          studentResources
+            .filter(
+              (resource) =>
+                resource.subject === subject && resource.topic === topic
+            )
+            .map((resource) => resource.source)
+        )
+      ),
+    [studentResources, subject, topic]
+  );
+
+  const sourceOptions = useMemo(() => {
+    if (hasResources) {
+      return resourceSources.map((source) => ({ value: source, label: source }));
+    }
+    return existingSources.map((source) => ({ value: source, label: source }));
+  }, [existingSources, hasResources, resourceSources]);
+
+  const topics = useMemo(
+    () => (hasResources ? resourceTopics : getTopicsForSubject(subject)),
+    [hasResources, resourceTopics, subject]
+  );
+
+  const subjectOptions = useMemo(
+    () =>
+      hasResources
+        ? resourceSubjects.map((subject) => ({ value: subject, label: subject }))
+        : LGS_SUBJECTS.map((subject) => ({ value: subject, label: subject })),
+    [hasResources, resourceSubjects]
+  );
+
+  const isCustomSource = false;
+
+  useEffect(() => {
+    if (hasResources) {
+      setSubject(resourceSubjects[0] ?? "");
+    } else {
+      setSubject(LGS_SUBJECTS[0]);
+    }
+  }, [hasResources, resourceSubjects]);
+
+  useEffect(() => {
+    if (hasResources) {
+      setTopic(resourceTopics[0] ?? "");
+    } else {
+      setTopic(getTopicsForSubject(subject)[0] ?? "");
+    }
+  }, [hasResources, resourceTopics, subject]);
+
+  useEffect(() => {
+    if (hasResources) {
+      setSelectedSource(resourceSources[0] ?? "");
+    } else {
+      setSelectedSource(existingSources[0] ?? CUSTOM_SOURCE_VALUE);
+    }
+  }, [hasResources, existingSources, resourceSources]);
 
   function handleSubjectChange(nextSubject: string) {
     setSubject(nextSubject);
-    const nextTopics = getTopicsForSubject(nextSubject);
-    setTopic(nextTopics[0] ?? "");
   }
 
   function handleTotalChange(value: number) {
@@ -71,12 +137,20 @@ export function TestEntryForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Select
+          name="source"
+          label="Kaynak"
+          required
+          value={selectedSource}
+          onChange={(e) => setSelectedSource(e.target.value)}
+          options={sourceOptions}
+        />
+        <Select
           name="subject"
           label="Ders"
           required
           value={subject}
           onChange={(e) => handleSubjectChange(e.target.value)}
-          options={LGS_SUBJECTS.map((s) => ({ value: s, label: s }))}
+          options={subjectOptions}
         />
         <Select
           name="topic"
@@ -84,15 +158,7 @@ export function TestEntryForm({
           required
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          options={topics.map((t) => ({ value: t, label: t }))}
-        />
-        <Select
-          name="source"
-          label="Kaynak"
-          required
-          value={selectedSource}
-          onChange={(e) => setSelectedSource(e.target.value)}
-          options={sourceOptions}
+          options={topics.map((topic) => ({ value: topic, label: topic }))}
         />
         {isCustomSource && (
           <Input

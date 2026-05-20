@@ -6,9 +6,16 @@ import { createClient } from "@/lib/supabase/server";
 export default async function NewTestPage() {
   const profile = await requireRole("student");
   const supabase = await createClient();
+
   const { data: sourceRows } = await supabase
     .from("test_records")
     .select("source")
+    .eq("student_id", profile.id)
+    .order("created_at", { ascending: false });
+
+  const { data: resourceRows } = await supabase
+    .from("study_resources")
+    .select("subject, topic, source")
     .eq("student_id", profile.id)
     .order("created_at", { ascending: false });
 
@@ -21,7 +28,10 @@ export default async function NewTestPage() {
       <p className="mb-6 text-slate-600 dark:text-slate-400">
         Test bilgilerini girin ve yanlış yaptığınız soru numaralarını ekleyin.
       </p>
-      <TestEntryForm existingSources={sources} />
+      <TestEntryForm
+        existingSources={sources}
+        studentResources={(resourceRows ?? []) as { subject: string; topic: string; source: string }[]}
+      />
     </AppShell>
   );
 }

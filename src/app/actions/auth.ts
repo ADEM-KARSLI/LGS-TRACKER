@@ -2,6 +2,7 @@
 
 import { formatAuthError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/supabase/config";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@/types/database";
 
@@ -55,7 +56,7 @@ export async function signUp(formData: FormData) {
     password,
     options: {
       data: { name, role },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      emailRedirectTo: `${getSiteUrl()}/auth/callback`,
     },
   });
 

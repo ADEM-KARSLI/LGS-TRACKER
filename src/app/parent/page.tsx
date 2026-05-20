@@ -48,9 +48,12 @@ export default async function ParentPage() {
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 flex flex-wrap gap-3">
+        <Link href="/parent/resources">
+          <Button>📚 Kaynak Yönetimi</Button>
+        </Link>
         <Link href="/parent/critical">
-          <Button>🔴 Kritik Soruları Yönet</Button>
+          <Button variant="secondary">🔴 Kritik Soruları Yönet</Button>
         </Link>
       </div>
 
