@@ -81,14 +81,16 @@ create policy "study_resources_select_parent" on public.study_resources
 
 create policy "study_resources_insert_parent" on public.study_resources
   for insert with check (
-    parent_id = auth.uid() and (
+    study_resources.parent_id = auth.uid() and (
       exists (
         select 1 from public.users u
-        where u.id = student_id and u.parent_id = auth.uid()
+        where u.id = study_resources.student_id
+          and u.parent_id = auth.uid()
       )
       or exists (
         select 1 from public.parent_student_relations psr
-        where psr.parent_id = auth.uid() and psr.student_id = student_id
+        where psr.parent_id = auth.uid()
+          and psr.student_id = study_resources.student_id
       )
     )
   );

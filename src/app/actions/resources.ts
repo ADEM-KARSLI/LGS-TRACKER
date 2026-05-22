@@ -9,9 +9,13 @@ export type ResourceFormState = {
   success?: string;
 };
 
-function resourceErrorMessage(message: string) {
+function resourceErrorMessage(message: string, code?: string) {
   if (message.includes("duplicate key") || message.includes("unique")) {
     return "Bu kaynak bu öğrenci için zaten eklenmiş.";
+  }
+
+  if (message.includes("row-level security")) {
+    return `Kaynak ekleme yetkisi Supabase policy tarafından reddedildi${code ? ` (${code})` : ""}. Veritabanı kaynak policy migration'ını çalıştırın.`;
   }
 
   if (message.includes("parent_id")) {
@@ -22,7 +26,7 @@ function resourceErrorMessage(message: string) {
     return "Kaynak tablosu eski kolonları bekliyor. subject/topic bağımlılığı temizlenmeli.";
   }
 
-  return message;
+  return code ? `${message} (${code})` : message;
 }
 
 export async function createResource(
@@ -63,7 +67,9 @@ export async function createResource(
   });
 
   if (insertError) {
-    return { error: resourceErrorMessage(insertError.message) };
+    return {
+      error: resourceErrorMessage(insertError.message, insertError.code),
+    };
   }
 
   revalidatePath("/parent/resources");
