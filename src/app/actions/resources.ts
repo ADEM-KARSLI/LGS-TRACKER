@@ -40,8 +40,6 @@ export async function createResource(formData: FormData) {
   const { error: insertError } = await supabase.from("study_resources").insert({
     parent_id: profile.id,
     student_id: studentId,
-    subject: "Kaynak",
-    topic: "Kaynak",
     source,
   });
 

@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { StudentCreateForm } from "@/components/student-create-form";
+import { StudentList } from "@/components/student-list";
 import { requireRole } from "@/lib/auth";
 import { getCriticalQuestionsForParent } from "@/lib/questions";
 import { getParentStudents } from "@/lib/students";
@@ -49,31 +50,7 @@ export default async function ParentPage() {
         <StudentCreateForm />
       </div>
 
-      {students.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-600 dark:bg-slate-900">
-          <p className="font-medium text-slate-800 dark:text-slate-100">
-            Henüz öğrenci bağlantısı yok
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            Yukarıdaki formdan ilk öğrenci hesabını oluşturabilirsiniz.
-          </p>
-        </div>
-      ) : (
-        <ul className="space-y-2">
-          {students.map((student) => (
-            <li
-              key={student.id}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900"
-            >
-              <p className="font-medium">{student.name}</p>
-              <p className="text-sm text-slate-500">
-                {student.username ? `@${student.username}` : student.email}
-                {student.grade ? ` · ${student.grade}. sınıf` : ""}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
+      <StudentList students={students} />
     </AppShell>
   );
 }

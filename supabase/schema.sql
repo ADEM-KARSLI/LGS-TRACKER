@@ -63,8 +63,6 @@ create table if not exists public.study_resources (
   id uuid primary key default gen_random_uuid(),
   parent_id uuid not null references public.users (id) on delete cascade,
   student_id uuid not null references public.users (id) on delete cascade,
-  subject text not null default 'Kaynak',
-  topic text not null default 'Kaynak',
   source text not null,
   created_at timestamptz not null default now(),
   unique (parent_id, student_id, source)
