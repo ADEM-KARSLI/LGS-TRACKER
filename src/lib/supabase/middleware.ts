@@ -32,7 +32,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const isAuthRoute = pathname === "/login";
-  const isPublicRoute = pathname === "/" || isAuthRoute;
+  const isPublicRoute = pathname === "/" || isAuthRoute || pathname === "/auth/callback";
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
@@ -60,7 +60,8 @@ export async function updateSession(request: NextRequest) {
       pathname.startsWith("/test") ||
       pathname.startsWith("/pending") ||
       pathname.startsWith("/critical") ||
-      pathname.startsWith("/analytics");
+      pathname.startsWith("/analytics") ||
+      pathname.startsWith("/chat");
 
     if (role === "parent" && studentRoutes) {
       const url = request.nextUrl.clone();

@@ -18,6 +18,7 @@ const studentNav: NavItem[] = [
 const parentNav: NavItem[] = [
   { href: "/parent", label: "Veli Paneli", icon: "🏠" },
   { href: "/parent/resources", label: "Kaynak Yönetimi", icon: "📚" },
+  { href: "/parent/analytics", label: "Analiz", icon: "📊" },
   { href: "/parent/critical", label: "Kritik Sorular", icon: "🔴" },
 ];
 

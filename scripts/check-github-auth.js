@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { spawnSync } = require('child_process');
 const inputData = 'protocol=https\nhost=github.com\n\n';
 const cmds = [

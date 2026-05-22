@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { createResource, deleteResource } from "@/app/actions/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,11 +31,6 @@ export function ResourceManager({
 }) {
   const [selectedStudent, setSelectedStudent] = useState(
     students[0]?.id ?? ""
-  );
-
-  const studentResources = useMemo(
-    () => resources.filter((resource) => resource.student_id === selectedStudent),
-    [resources, selectedStudent]
   );
 
   if (students.length === 0) {

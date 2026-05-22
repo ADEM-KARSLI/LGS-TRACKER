@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import type { UserRole } from "@/types/database";
 
 export type ResourceFormState = {
   error?: string;
@@ -29,7 +28,14 @@ export async function createResource(formData: FormData) {
     .eq("student_id", studentId)
     .single();
 
-  if (linkError || !link) {
+  const { data: student } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", studentId)
+    .eq("parent_id", profile.id)
+    .maybeSingle();
+
+  if ((linkError || !link) && !student) {
     throw new Error("Geçersiz öğrenci seçimi.");
   }
 

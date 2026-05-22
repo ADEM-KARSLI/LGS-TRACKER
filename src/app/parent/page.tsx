@@ -1,29 +1,14 @@
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { StudentCreateForm } from "@/components/student-create-form";
 import { requireRole } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
 import { getCriticalQuestionsForParent } from "@/lib/questions";
+import { getParentStudents } from "@/lib/students";
 import Link from "next/link";
 
 export default async function ParentPage() {
   const profile = await requireRole("parent");
-  const supabase = await createClient();
-
-  const { data: links } = await supabase
-    .from("parent_student_relations")
-    .select("student_id")
-    .eq("parent_id", profile.id);
-
-  const studentIds = (links ?? []).map((l) => l.student_id);
-  let students: { id: string; name: string; email: string }[] = [];
-
-  if (studentIds.length > 0) {
-    const { data } = await supabase
-      .from("users")
-      .select("id, name, email")
-      .in("id", studentIds);
-    students = data ?? [];
-  }
+  const students = await getParentStudents(profile.id);
 
   const criticalGroups = await getCriticalQuestionsForParent(profile.id);
   const criticalCount = criticalGroups.reduce(
@@ -52,9 +37,16 @@ export default async function ParentPage() {
         <Link href="/parent/resources">
           <Button>📚 Kaynak Yönetimi</Button>
         </Link>
+        <Link href="/parent/analytics">
+          <Button variant="secondary">📊 Analiz</Button>
+        </Link>
         <Link href="/parent/critical">
           <Button variant="secondary">🔴 Kritik Soruları Yönet</Button>
         </Link>
+      </div>
+
+      <div className="mb-8">
+        <StudentCreateForm />
       </div>
 
       {students.length === 0 ? (
@@ -63,11 +55,7 @@ export default async function ParentPage() {
             Henüz öğrenci bağlantısı yok
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            Öğrenci hesabını bu veli hesabına bağlamak için veritabanında{" "}
-            <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">
-              parent_student_relations
-            </code>{" "}
-            kaydı eklenmelidir.
+            Yukarıdaki formdan ilk öğrenci hesabını oluşturabilirsiniz.
           </p>
         </div>
       ) : (
@@ -78,7 +66,10 @@ export default async function ParentPage() {
               className="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900"
             >
               <p className="font-medium">{student.name}</p>
-              <p className="text-sm text-slate-500">{student.email}</p>
+              <p className="text-sm text-slate-500">
+                {student.username ? `@${student.username}` : student.email}
+                {student.grade ? ` · ${student.grade}. sınıf` : ""}
+              </p>
             </li>
           ))}
         </ul>

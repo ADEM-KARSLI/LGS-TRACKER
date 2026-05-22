@@ -37,6 +37,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  username?: string | null;
+  grade?: string | null;
+  parent_id?: string | null;
   created_at: string;
 }
 

@@ -41,7 +41,7 @@ export async function getStudentDashboardData(studentId: string) {
   }>;
 
   const dayNames = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
-  const weeklyDistribution = dayNames.map((label, index) => ({
+  const weeklyDistribution = dayNames.map((label) => ({
     day: label,
     tests: 0,
     questions: 0,

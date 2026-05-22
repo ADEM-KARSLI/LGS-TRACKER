@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { getTopicsForSubject, LGS_SUBJECTS } from "@/lib/lgs-curriculum";
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
 const initialState: TestFormState = {};
 const CUSTOM_SOURCE_VALUE = "__custom__";
@@ -22,12 +22,26 @@ export function TestEntryForm({
   const [state, formAction, isPending] = useActionState(createTest, initialState);
   const [totalQuestions, setTotalQuestions] = useState(15);
   const [wrongSet, setWrongSet] = useState<Set<number>>(new Set());
-  const [subject, setSubject] = useState("");
-  const [topic, setTopic] = useState("");
-  const [selectedSource, setSelectedSource] = useState("");
-  const [customSource, setCustomSource] = useState("");
 
   const hasResources = studentResources.length > 0;
+  const initialSubject = hasResources
+    ? studentResources[0]?.subject ?? ""
+    : LGS_SUBJECTS[0];
+  const initialTopic = hasResources
+    ? studentResources.find((resource) => resource.subject === initialSubject)
+        ?.topic ?? ""
+    : getTopicsForSubject(initialSubject)[0] ?? "";
+  const initialSource = hasResources
+    ? studentResources.find(
+        (resource) =>
+          resource.subject === initialSubject && resource.topic === initialTopic
+      )?.source ?? ""
+    : existingSources[0] ?? CUSTOM_SOURCE_VALUE;
+
+  const [subject, setSubject] = useState(initialSubject);
+  const [topic, setTopic] = useState(initialTopic);
+  const [selectedSource, setSelectedSource] = useState(initialSource);
+  const [customSource, setCustomSource] = useState("");
 
   const resourceSubjects = useMemo(
     () => Array.from(new Set(studentResources.map((resource) => resource.subject))),
@@ -65,7 +79,10 @@ export function TestEntryForm({
     if (hasResources) {
       return resourceSources.map((source) => ({ value: source, label: source }));
     }
-    return existingSources.map((source) => ({ value: source, label: source }));
+    return [
+      ...existingSources.map((source) => ({ value: source, label: source })),
+      { value: CUSTOM_SOURCE_VALUE, label: "Yeni kaynak gir" },
+    ];
   }, [existingSources, hasResources, resourceSources]);
 
   const topics = useMemo(
@@ -81,34 +98,45 @@ export function TestEntryForm({
     [hasResources, resourceSubjects]
   );
 
-  const isCustomSource = false;
+  const isCustomSource = selectedSource === CUSTOM_SOURCE_VALUE;
 
-  useEffect(() => {
+  function sourcesForSelection(nextSubject: string, nextTopic: string) {
     if (hasResources) {
-      setSubject(resourceSubjects[0] ?? "");
-    } else {
-      setSubject(LGS_SUBJECTS[0]);
+      return Array.from(
+        new Set(
+          studentResources
+            .filter(
+              (resource) =>
+                resource.subject === nextSubject && resource.topic === nextTopic
+            )
+            .map((resource) => resource.source)
+        )
+      );
     }
-  }, [hasResources, resourceSubjects]);
-
-  useEffect(() => {
-    if (hasResources) {
-      setTopic(resourceTopics[0] ?? "");
-    } else {
-      setTopic(getTopicsForSubject(subject)[0] ?? "");
-    }
-  }, [hasResources, resourceTopics, subject]);
-
-  useEffect(() => {
-    if (hasResources) {
-      setSelectedSource(resourceSources[0] ?? "");
-    } else {
-      setSelectedSource(existingSources[0] ?? CUSTOM_SOURCE_VALUE);
-    }
-  }, [hasResources, existingSources, resourceSources]);
+    return existingSources;
+  }
 
   function handleSubjectChange(nextSubject: string) {
     setSubject(nextSubject);
+    const nextTopics = hasResources
+      ? Array.from(
+          new Set(
+            studentResources
+              .filter((resource) => resource.subject === nextSubject)
+              .map((resource) => resource.topic)
+          )
+        )
+      : [...getTopicsForSubject(nextSubject)];
+    const nextTopic = nextTopics[0] ?? "";
+    const nextSources = sourcesForSelection(nextSubject, nextTopic);
+    setTopic(nextTopic);
+    setSelectedSource(nextSources[0] ?? CUSTOM_SOURCE_VALUE);
+  }
+
+  function handleTopicChange(nextTopic: string) {
+    setTopic(nextTopic);
+    const nextSources = sourcesForSelection(subject, nextTopic);
+    setSelectedSource(nextSources[0] ?? CUSTOM_SOURCE_VALUE);
   }
 
   function handleTotalChange(value: number) {
@@ -157,7 +185,7 @@ export function TestEntryForm({
           label="Konu"
           required
           value={topic}
-          onChange={(e) => setTopic(e.target.value)}
+          onChange={(e) => handleTopicChange(e.target.value)}
           options={topics.map((topic) => ({ value: topic, label: topic }))}
         />
         {isCustomSource && (

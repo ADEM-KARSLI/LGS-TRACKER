@@ -1,5 +1,6 @@
 import { buildQuestionTree } from "@/lib/question-tree";
 import { createClient } from "@/lib/supabase/server";
+import { getParentStudents } from "@/lib/students";
 import type {
   PendingTree,
   QuestionGroup,
@@ -144,23 +145,11 @@ export async function getCriticalByPriority(studentId: string) {
 
 export async function getCriticalQuestionsForParent(parentId: string) {
   const supabase = await createClient();
+  const students = await getParentStudents(parentId);
+  const studentIds = students.map((student) => student.id);
+  if (studentIds.length === 0) return [];
 
-  const { data: links, error: linkError } = await supabase
-    .from("parent_student_relations")
-    .select("student_id")
-    .eq("parent_id", parentId);
-
-  if (linkError) throw new Error(linkError.message);
-  if (!links?.length) return [];
-
-  const studentIds = links.map((l) => l.student_id);
-
-  const { data: students } = await supabase
-    .from("users")
-    .select("id, name")
-    .in("id", studentIds);
-
-  const nameById = new Map((students ?? []).map((s) => [s.id, s.name]));
+  const nameById = new Map(students.map((student) => [student.id, student.name]));
   const { data, error } = await supabase
     .from("weak_questions")
     .select(

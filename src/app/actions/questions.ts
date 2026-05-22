@@ -49,6 +49,11 @@ export async function submitQuestionReview(
 ) {
   const profile = await requireRole("student");
   const question = await getQuestionForStudent(questionId, profile.id);
+  // These checklist values are accepted by the action so the UI can start
+  // sending them without a breaking signature change when audit fields are added.
+  void triedAgain;
+  void watchedVideo;
+  void reviewedTopic;
 
   if (!question) return { error: "Soru bulunamadı." };
   if (question.status !== "pending") {
@@ -92,7 +97,14 @@ export async function resolveParentQuestion(questionId: string) {
     .eq("student_id", studentId)
     .maybeSingle();
 
-  if (!link) {
+  const { data: student } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", studentId)
+    .eq("parent_id", profile.id)
+    .maybeSingle();
+
+  if (!link && !student) {
     return { error: "Bu öğrenci hesabınıza bağlı değil." };
   }
 

@@ -18,6 +18,16 @@ export function getSupabaseAnonKey(): string {
   return key;
 }
 
+export function getSupabaseServiceRoleKey(): string {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) {
+    throw new Error(
+      "Missing SUPABASE_SERVICE_ROLE_KEY. Parent-created student accounts require a server-only Supabase service role key."
+    );
+  }
+  return key;
+}
+
 export function getSiteUrl(): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (!siteUrl) {

@@ -3,7 +3,6 @@
 import { signIn, signUp } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { useState, useTransition } from "react";
 
 export function LoginForm() {
@@ -20,8 +19,8 @@ export function LoginForm() {
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           {mode === "login"
-            ? "Hesabınıza giriş yapın"
-            : "Öğrenci veya veli hesabı oluşturun"}
+            ? "Parent e-postası veya öğrenci kullanıcı adıyla giriş yapın"
+            : "Parent hesabı oluşturun"}
         </p>
       </div>
 
@@ -72,25 +71,16 @@ export function LoginForm() {
         className="space-y-4"
       >
         {mode === "signup" && (
-          <>
-            <Input name="name" label="Ad Soyad" required autoComplete="name" />
-            <Select
-              name="role"
-              label="Rol"
-              defaultValue="student"
-              options={[
-                { value: "student", label: "Öğrenci" },
-                { value: "parent", label: "Veli" },
-              ]}
-            />
-          </>
+          <Input name="name" label="Ad Soyad" required autoComplete="name" />
         )}
         <Input
-          name="email"
-          label="E-posta"
-          type="email"
+          name={mode === "login" ? "identifier" : "email"}
+          label={mode === "login" ? "E-posta veya kullanıcı adı" : "E-posta"}
+          type={mode === "login" ? "text" : "email"}
           required
-          autoComplete="email"
+          autoCapitalize="none"
+          autoComplete={mode === "login" ? "username" : "email"}
+          placeholder={mode === "login" ? "veli@email.com veya elif123" : undefined}
         />
         <Input
           name="password"

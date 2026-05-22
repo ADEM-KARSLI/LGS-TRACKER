@@ -3,14 +3,21 @@
 import { formatAuthError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/supabase/config";
+import { isStudentUsername, studentEmailFromUsername } from "@/lib/student-auth";
 import { redirect } from "next/navigation";
-import type { UserRole } from "@/types/database";
 
 export async function signIn(
   formData: FormData
 ): Promise<{ error?: string } | void> {
-  const email = String(formData.get("email") ?? "").trim();
+  const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const email = isStudentUsername(identifier)
+    ? studentEmailFromUsername(identifier)
+    : identifier.toLowerCase();
+
+  if (!identifier || !password) {
+    return { error: "E-posta/kullanıcı adı ve şifre zorunludur." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -40,14 +47,10 @@ export async function signUp(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const role = String(formData.get("role") ?? "student") as UserRole;
+  const role = "parent";
 
   if (!name || !email || !password) {
     return { error: "Tüm alanları doldurun." };
-  }
-
-  if (role !== "student" && role !== "parent") {
-    return { error: "Geçersiz rol." };
   }
 
   const supabase = await createClient();

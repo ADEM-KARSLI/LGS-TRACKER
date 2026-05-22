@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getParentStudents } from "@/lib/students";
 import type { StudyResource, User } from "@/types/database";
 
 export async function getStudentResources(studentId: string): Promise<StudyResource[]> {
@@ -15,24 +16,11 @@ export async function getStudentResources(studentId: string): Promise<StudyResou
 
 export async function getParentResources(parentId: string) {
   const supabase = await createClient();
-
-  const { data: links, error: linkError } = await supabase
-    .from("parent_student_relations")
-    .select("student_id")
-    .eq("parent_id", parentId);
-
-  if (linkError) throw new Error(linkError.message);
-  const studentIds = (links ?? []).map((row) => row.student_id);
+  const students = await getParentStudents(parentId);
+  const studentIds = students.map((student) => student.id);
   if (studentIds.length === 0) {
     return { students: [] as User[], resources: [] as StudyResource[] };
   }
-
-  const { data: students, error: studentError } = await supabase
-    .from("users")
-    .select("id, name, email")
-    .in("id", studentIds);
-
-  if (studentError) throw new Error(studentError.message);
 
   const { data: resources, error: resourceError } = await supabase
     .from("study_resources")
@@ -43,7 +31,7 @@ export async function getParentResources(parentId: string) {
   if (resourceError) throw new Error(resourceError.message);
 
   return {
-    students: (students ?? []) as User[],
+    students,
     resources: (resources ?? []) as StudyResource[],
   };
 }
@@ -64,7 +52,14 @@ export async function createStudyResource(
     .eq("student_id", studentId)
     .single();
 
-  if (linkError || !link) {
+  const { data: student } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", studentId)
+    .eq("parent_id", parentId)
+    .maybeSingle();
+
+  if ((linkError || !link) && !student) {
     throw new Error("Geçersiz öğrenci seçimi.");
   }
 
