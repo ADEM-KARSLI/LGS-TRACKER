@@ -5,7 +5,11 @@ import { QuestionMatrix, QuestionMatrixSummary } from "@/components/question-mat
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { getTopicsForSubject, LGS_SUBJECTS } from "@/lib/lgs-curriculum";
+import {
+  getTopicsForSubject,
+  LGS_SUBJECTS,
+  SUBJECT_LABELS,
+} from "@/lib/lgs-curriculum";
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 
@@ -42,10 +46,7 @@ export function TestEntryForm({
   const initialSource = hasResources
     ? studentResources[0]?.source ?? ""
     : existingSources[0] ?? CUSTOM_SOURCE_VALUE;
-  const initialSubject = hasResources
-    ? studentResources.find((resource) => resource.source === initialSource)
-        ?.subject ?? ""
-    : LGS_SUBJECTS[0];
+  const initialSubject = LGS_SUBJECTS[0];
   const initialTopic = GENERAL_TOPIC;
 
   const [selectedSource, setSelectedSource] = useState(initialSource);
@@ -58,29 +59,6 @@ export function TestEntryForm({
     [studentResources]
   );
 
-  const resourceSubjects = useMemo(
-    () =>
-      uniqueValues(
-        studentResources
-          .filter((resource) => resource.source === selectedSource)
-          .map((resource) => resource.subject)
-      ),
-    [selectedSource, studentResources]
-  );
-
-  const resourceTopics = useMemo(
-    () =>
-      uniqueValues(
-        studentResources
-          .filter(
-            (resource) =>
-              resource.source === selectedSource && resource.subject === subject
-          )
-          .map((resource) => resource.topic)
-      ),
-    [selectedSource, studentResources, subject]
-  );
-
   const sourceOptions = useMemo(() => {
     if (hasResources) {
       return allResourceSources.map((source) => ({ value: source, label: source }));
@@ -91,37 +69,21 @@ export function TestEntryForm({
     ];
   }, [allResourceSources, existingSources, hasResources]);
 
-  const topics = useMemo(
-    () => (hasResources ? resourceTopics : getTopicsForSubject(subject)),
-    [hasResources, resourceTopics, subject]
-  );
+  const topics = useMemo(() => getTopicsForSubject(subject), [subject]);
 
   const subjectOptions = useMemo(
     () =>
-      hasResources
-        ? resourceSubjects.map((subject) => ({ value: subject, label: subject }))
-        : LGS_SUBJECTS.map((subject) => ({ value: subject, label: subject })),
-    [hasResources, resourceSubjects]
+      LGS_SUBJECTS.map((subject) => ({
+        value: subject,
+        label: SUBJECT_LABELS[subject] ?? subject,
+      })),
+    []
   );
 
   const isCustomSource = selectedSource === CUSTOM_SOURCE_VALUE;
 
-  function subjectsForSource(nextSource: string) {
-    if (hasResources) {
-      return uniqueValues(
-        studentResources
-          .filter((resource) => resource.source === nextSource)
-          .map((resource) => resource.subject)
-      );
-    }
-    return LGS_SUBJECTS;
-  }
-
   function handleSourceChange(nextSource: string) {
     setSelectedSource(nextSource);
-    const nextSubject = subjectsForSource(nextSource)[0] ?? "";
-    setSubject(nextSubject);
-    setTopic(GENERAL_TOPIC);
   }
 
   function handleSubjectChange(nextSubject: string) {
