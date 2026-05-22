@@ -28,6 +28,7 @@ drop table if exists public.test_records cascade;
 drop table if exists public.parent_student_relations cascade;
 drop table if exists public.users cascade;
 drop function if exists public.handle_new_user() cascade;
+delete from auth.users;
 `;
 
 let lastError;

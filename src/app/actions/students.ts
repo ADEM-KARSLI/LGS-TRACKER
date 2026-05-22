@@ -38,7 +38,16 @@ export async function createStudent(
 
   const username = usernameCheck.username;
   const email = studentEmailFromUsername(username);
-  const admin = createAdminClient();
+  let admin: ReturnType<typeof createAdminClient>;
+
+  try {
+    admin = createAdminClient();
+  } catch {
+    return {
+      error:
+        "Öğrenci oluşturmak için SUPABASE_SERVICE_ROLE_KEY sunucu ortam değişkeni tanımlanmalıdır.",
+    };
+  }
 
   const { data: existingStudent, error: existingError } = await admin
     .from("users")
