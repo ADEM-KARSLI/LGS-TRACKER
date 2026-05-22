@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import type { User } from "@/types/database";
 
+function isMissingProfileColumn(message: string) {
+  return (
+    message.includes("username") ||
+    message.includes("grade") ||
+    message.includes("parent_id")
+  );
+}
+
 export async function getParentStudents(parentId: string): Promise<User[]> {
   const supabase = await createClient();
 
@@ -10,7 +18,9 @@ export async function getParentStudents(parentId: string): Promise<User[]> {
     .eq("role", "student")
     .eq("parent_id", parentId);
 
-  if (directError) throw new Error(directError.message);
+  if (directError && !isMissingProfileColumn(directError.message)) {
+    throw new Error(directError.message);
+  }
 
   const { data: links, error: linkError } = await supabase
     .from("parent_student_relations")
@@ -28,12 +38,25 @@ export async function getParentStudents(parentId: string): Promise<User[]> {
       .select("id, name, email, role, username, grade, parent_id, created_at")
       .in("id", linkedIds);
 
-    if (error) throw new Error(error.message);
-    linkedStudents = (data ?? []) as User[];
+    if (error && isMissingProfileColumn(error.message)) {
+      const { data: legacyData, error: legacyError } = await supabase
+        .from("users")
+        .select("id, name, email, role, created_at")
+        .in("id", linkedIds);
+
+      if (legacyError) throw new Error(legacyError.message);
+      linkedStudents = (legacyData ?? []) as User[];
+    } else {
+      if (error) throw new Error(error.message);
+      linkedStudents = (data ?? []) as User[];
+    }
   }
 
   const byId = new Map<string, User>();
-  for (const student of [...((directStudents ?? []) as User[]), ...linkedStudents]) {
+  for (const student of [
+    ...((directError ? [] : directStudents ?? []) as User[]),
+    ...linkedStudents,
+  ]) {
     byId.set(student.id, student);
   }
 
