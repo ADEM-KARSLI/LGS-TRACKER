@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { createResource, deleteResource } from "@/app/actions/resources";
+import { useActionState, useState } from "react";
+import {
+  createResource,
+  deleteResource,
+  type ResourceFormState,
+} from "@/app/actions/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -20,6 +24,8 @@ type ResourceRow = {
   created_at: string;
 };
 
+const initialState: ResourceFormState = {};
+
 export function ResourceManager({
   students,
   resources,
@@ -29,6 +35,10 @@ export function ResourceManager({
 }) {
   const [selectedStudent, setSelectedStudent] = useState(
     students[0]?.id ?? ""
+  );
+  const [state, formAction, isPending] = useActionState(
+    createResource,
+    initialState
   );
 
   if (students.length === 0) {
@@ -45,7 +55,19 @@ export function ResourceManager({
         <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-white">
           Yeni Kaynak Ekle
         </h2>
-        <form action={createResource} className="space-y-4">
+        {state.error && (
+          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+            {state.error}
+          </p>
+        )}
+
+        {state.success && (
+          <p className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+            {state.success}
+          </p>
+        )}
+
+        <form action={formAction} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Select
               name="student_id"
@@ -65,7 +87,9 @@ export function ResourceManager({
             />
           </div>
           <div className="flex gap-3">
-            <Button type="submit">Kaynağı Ekle</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Ekleniyor..." : "Kaynağı Ekle"}
+            </Button>
           </div>
         </form>
       </section>

@@ -2,20 +2,39 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 export type ResourceFormState = {
   error?: string;
   success?: string;
 };
 
-export async function createResource(formData: FormData) {
+function resourceErrorMessage(message: string) {
+  if (message.includes("duplicate key") || message.includes("unique")) {
+    return "Bu kaynak bu öğrenci için zaten eklenmiş.";
+  }
+
+  if (message.includes("parent_id")) {
+    return "study_resources tablosunda parent_id kolonu veya ilişkili policy eksik görünüyor.";
+  }
+
+  if (message.includes("subject") || message.includes("topic")) {
+    return "Kaynak tablosu eski kolonları bekliyor. subject/topic bağımlılığı temizlenmeli.";
+  }
+
+  return message;
+}
+
+export async function createResource(
+  _prev: ResourceFormState,
+  formData: FormData
+): Promise<ResourceFormState> {
   const profile = await requireRole("parent");
   const studentId = String(formData.get("student_id") ?? "").trim();
   const source = String(formData.get("source") ?? "").trim();
 
   if (!studentId || !source) {
-    throw new Error("Lütfen öğrenci ve kaynak adını girin.");
+    return { error: "Lütfen öğrenci ve kaynak adını girin." };
   }
 
   const supabase = await createClient();
@@ -34,7 +53,7 @@ export async function createResource(formData: FormData) {
     .maybeSingle();
 
   if ((linkError || !link) && !student) {
-    throw new Error("Geçersiz öğrenci seçimi.");
+    return { error: "Geçersiz öğrenci seçimi." };
   }
 
   const { error: insertError } = await supabase.from("study_resources").insert({
@@ -44,10 +63,13 @@ export async function createResource(formData: FormData) {
   });
 
   if (insertError) {
-    throw new Error(insertError.message);
+    return { error: resourceErrorMessage(insertError.message) };
   }
 
-  redirect("/parent/resources");
+  revalidatePath("/parent/resources");
+  revalidatePath("/test/new");
+
+  return { success: "Kaynak eklendi." };
 }
 
 export async function deleteResource(formData: FormData) {
@@ -69,5 +91,6 @@ export async function deleteResource(formData: FormData) {
     throw new Error(error.message);
   }
 
-  redirect("/parent/resources");
+  revalidatePath("/parent/resources");
+  revalidatePath("/test/new");
 }
