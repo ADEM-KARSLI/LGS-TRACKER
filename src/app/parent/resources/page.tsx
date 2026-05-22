@@ -10,7 +10,8 @@ export default async function ParentResourcesPage() {
   return (
     <AppShell role="parent" title="Kaynak Yönetimi" userName={profile.name}>
       <p className="mb-6 text-slate-600 dark:text-slate-400">
-        Öğrenciniz için ders, konu ve kaynak ekleyin. Bu kaynaklar öğrenci test ekleme formunda dropdown olarak görünecektir.
+        Öğrenciniz için kaynak adı ekleyin. Bu kaynaklar sadece ilgili öğrencinin
+        test ekleme ekranında kitap seçeneği olarak görünür.
       </p>
       <ResourceManager students={students} resources={resources} />
     </AppShell>

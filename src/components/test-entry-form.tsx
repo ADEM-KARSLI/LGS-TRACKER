@@ -36,7 +36,7 @@ export function TestEntryForm({
   studentResources,
 }: {
   existingSources: string[];
-  studentResources: { subject: string; topic: string; source: string }[];
+  studentResources: { source: string }[];
 }) {
   const [state, formAction, isPending] = useActionState(createTest, initialState);
   const [totalQuestions, setTotalQuestions] = useState(15);

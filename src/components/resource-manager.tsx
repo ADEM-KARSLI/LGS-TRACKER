@@ -16,8 +16,6 @@ type ResourceRow = {
   id: string;
   parent_id: string;
   student_id: string;
-  subject: string;
-  topic: string;
   source: string;
   created_at: string;
 };
@@ -59,9 +57,12 @@ export function ResourceManager({
                 label: `${student.name} (${student.email})`,
               }))}
             />
-            <Input name="subject" label="Ders" required />
-            <Input name="topic" label="Konu" required />
-            <Input name="source" label="Kaynak" required />
+            <Input
+              name="source"
+              label="Kaynak adı"
+              required
+              placeholder="Örn: Karekök 8. Sınıf"
+            />
           </div>
           <div className="flex gap-3">
             <Button type="submit">Kaynağı Ekle</Button>
@@ -102,15 +103,7 @@ export function ResourceManager({
                         key={resource.id}
                         className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
                       >
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-slate-500">Ders</p>
-                            <p className="font-medium text-slate-900 dark:text-white">{resource.subject}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs uppercase tracking-wide text-slate-500">Konu</p>
-                            <p className="font-medium text-slate-900 dark:text-white">{resource.topic}</p>
-                          </div>
+                        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                           <div>
                             <p className="text-xs uppercase tracking-wide text-slate-500">Kaynak</p>
                             <p className="font-medium text-slate-900 dark:text-white">{resource.source}</p>
@@ -137,8 +130,8 @@ export function ResourceManager({
           Not
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Öğrencinin test ekleme ekranına bu liste içinden ders, konu ve kaynak seçenekleri gelecek.
-          Bu yüzden veli kaynakları düzenli ve doğru eklemelidir.
+          Öğrencinin test ekleme ekranında sadece kendisine eşlenen kaynaklar
+          kitap seçeneği olarak görünür.
         </p>
       </section>
     </div>

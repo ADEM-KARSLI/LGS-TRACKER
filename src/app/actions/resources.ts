@@ -12,12 +12,10 @@ export type ResourceFormState = {
 export async function createResource(formData: FormData) {
   const profile = await requireRole("parent");
   const studentId = String(formData.get("student_id") ?? "").trim();
-  const subject = String(formData.get("subject") ?? "").trim();
-  const topic = String(formData.get("topic") ?? "").trim();
   const source = String(formData.get("source") ?? "").trim();
 
-  if (!studentId || !subject || !topic || !source) {
-    throw new Error("Lütfen öğrenci, ders, konu ve kaynak alanlarını doldurun.");
+  if (!studentId || !source) {
+    throw new Error("Lütfen öğrenci ve kaynak adını girin.");
   }
 
   const supabase = await createClient();
@@ -42,8 +40,8 @@ export async function createResource(formData: FormData) {
   const { error: insertError } = await supabase.from("study_resources").insert({
     parent_id: profile.id,
     student_id: studentId,
-    subject,
-    topic,
+    subject: "Kaynak",
+    topic: "Kaynak",
     source,
   });
 

@@ -15,7 +15,7 @@ export default async function NewTestPage() {
 
   const { data: resourceRows } = await supabase
     .from("study_resources")
-    .select("subject, topic, source")
+    .select("source")
     .eq("student_id", profile.id)
     .order("created_at", { ascending: false });
 
@@ -30,7 +30,7 @@ export default async function NewTestPage() {
       </p>
       <TestEntryForm
         existingSources={sources}
-        studentResources={(resourceRows ?? []) as { subject: string; topic: string; source: string }[]}
+        studentResources={(resourceRows ?? []) as { source: string }[]}
       />
     </AppShell>
   );

@@ -39,8 +39,6 @@ export async function getParentResources(parentId: string) {
 export async function createStudyResource(
   parentId: string,
   studentId: string,
-  subject: string,
-  topic: string,
   source: string
 ) {
   const supabase = await createClient();
@@ -66,8 +64,8 @@ export async function createStudyResource(
   const { error } = await supabase.from("study_resources").insert({
     parent_id: parentId,
     student_id: studentId,
-    subject,
-    topic,
+    subject: "Kaynak",
+    topic: "Kaynak",
     source,
   });
 

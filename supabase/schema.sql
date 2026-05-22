@@ -63,11 +63,11 @@ create table if not exists public.study_resources (
   id uuid primary key default gen_random_uuid(),
   parent_id uuid not null references public.users (id) on delete cascade,
   student_id uuid not null references public.users (id) on delete cascade,
-  subject text not null,
-  topic text not null,
+  subject text not null default 'Kaynak',
+  topic text not null default 'Kaynak',
   source text not null,
   created_at timestamptz not null default now(),
-  unique (parent_id, student_id, subject, topic, source)
+  unique (parent_id, student_id, source)
 );
 
 create index if not exists idx_study_resources_student on public.study_resources (student_id, created_at desc);
