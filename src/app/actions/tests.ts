@@ -10,8 +10,6 @@ export type TestFormState = {
   success?: string;
 };
 
-const CUSTOM_SOURCE_VALUE = "__custom__";
-
 function parseWrongQuestions(raw: string, totalQuestions: number): number[] {
   if (!raw.trim()) return [];
 
@@ -37,10 +35,7 @@ export async function createTest(
 
   const subject = String(formData.get("subject") ?? "").trim();
   const topic = String(formData.get("topic") ?? "").trim();
-  const selectedSource = String(formData.get("source") ?? "").trim();
-  const customSource = String(formData.get("custom_source") ?? "").trim();
-  const source =
-    selectedSource === CUSTOM_SOURCE_VALUE ? customSource : selectedSource;
+  const source = String(formData.get("source") ?? "").trim();
   const testNo = parseInt(String(formData.get("test_no") ?? ""), 10);
   const totalQuestions = parseInt(String(formData.get("total_questions") ?? ""), 10);
   const wrongRaw = String(formData.get("wrong_questions") ?? "").trim();

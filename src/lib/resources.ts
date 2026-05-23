@@ -6,7 +6,7 @@ export async function getStudentResources(studentId: string): Promise<StudyResou
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("study_resources")
-    .select("id, parent_id, student_id, source, created_at")
+    .select("id, parent_id, student_id, grade, source, created_at")
     .eq("student_id", studentId)
     .order("created_at", { ascending: false });
 
@@ -24,7 +24,7 @@ export async function getParentResources(parentId: string) {
 
   const { data: resources, error: resourceError } = await supabase
     .from("study_resources")
-    .select("id, parent_id, student_id, source, created_at")
+    .select("id, parent_id, student_id, grade, source, created_at")
     .in("student_id", studentIds)
     .order("created_at", { ascending: false });
 
@@ -39,6 +39,7 @@ export async function getParentResources(parentId: string) {
 export async function createStudyResource(
   parentId: string,
   studentId: string,
+  grade: string,
   source: string
 ) {
   const supabase = await createClient();
@@ -64,6 +65,7 @@ export async function createStudyResource(
   const { error } = await supabase.from("study_resources").insert({
     parent_id: parentId,
     student_id: studentId,
+    grade,
     source,
   });
 

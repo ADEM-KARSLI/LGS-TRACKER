@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
+import { normalizeGradeValue } from "@/lib/lgs-curriculum";
 import { revalidatePath } from "next/cache";
 
 export type ResourceFormState = {
@@ -22,6 +23,10 @@ function resourceErrorMessage(message: string, code?: string) {
     return "study_resources tablosunda parent_id kolonu veya ilişkili policy eksik görünüyor.";
   }
 
+  if (message.includes("grade")) {
+    return "study_resources tablosunda grade kolonu eksik görünüyor. 008 migration'ını çalıştırın.";
+  }
+
   if (message.includes("subject") || message.includes("topic")) {
     return "Kaynak tablosu eski kolonları bekliyor. subject/topic bağımlılığı temizlenmeli.";
   }
@@ -35,10 +40,11 @@ export async function createResource(
 ): Promise<ResourceFormState> {
   const profile = await requireRole("parent");
   const studentId = String(formData.get("student_id") ?? "").trim();
+  const grade = normalizeGradeValue(String(formData.get("grade") ?? ""));
   const source = String(formData.get("source") ?? "").trim();
 
-  if (!studentId || !source) {
-    return { error: "Lütfen öğrenci ve kaynak adını girin." };
+  if (!studentId || !grade || !source) {
+    return { error: "Lütfen öğrenci, sınıf ve kaynak adını girin." };
   }
 
   const supabase = await createClient();
@@ -63,6 +69,7 @@ export async function createResource(
   const { error: insertError } = await supabase.from("study_resources").insert({
     parent_id: profile.id,
     student_id: studentId,
+    grade,
     source,
   });
 

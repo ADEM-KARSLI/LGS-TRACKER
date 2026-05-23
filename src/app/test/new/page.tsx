@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { TestEntryForm } from "@/components/test-entry-form";
 import { requireRole } from "@/lib/auth";
+import { normalizeGradeValue } from "@/lib/lgs-curriculum";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function NewTestPage() {
@@ -15,7 +16,7 @@ export default async function NewTestPage() {
 
   const { data: resourceRows } = await supabase
     .from("study_resources")
-    .select("source")
+    .select("id, source, grade")
     .eq("student_id", profile.id)
     .order("created_at", { ascending: false });
 
@@ -30,7 +31,10 @@ export default async function NewTestPage() {
       </p>
       <TestEntryForm
         existingSources={sources}
-        studentResources={(resourceRows ?? []) as { source: string }[]}
+        defaultGrade={normalizeGradeValue(profile.grade)}
+        studentResources={
+          (resourceRows ?? []) as { id: string; source: string; grade: string }[]
+        }
       />
     </AppShell>
   );

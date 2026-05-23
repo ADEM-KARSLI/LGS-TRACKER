@@ -7,9 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:check-parent-reset": "node scripts/check-parent-demo-reset.mjs",
     "db:migrate:005": "node scripts/apply-migration-005.mjs",
     "db:migrate:006": "node scripts/apply-migration-006.mjs",
     "db:migrate:007": "node scripts/apply-migration-007.mjs",
+    "db:migrate:008": "node scripts/apply-migration-008.mjs",
+    "db:reset-parent-demo": "node scripts/reset-parent-demo-data.mjs",
     "db:reset": "node scripts/reset-database.mjs"
   },
   "dependencies": {
