@@ -2,7 +2,11 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
-import { SUBJECT_LABELS } from "@/lib/lgs-curriculum";
+import {
+  getSubjectsForGrade,
+  getTopicsForSubject,
+  normalizeGradeValue,
+} from "@/lib/lgs-curriculum";
 import { revalidatePath } from "next/cache";
 
 export type ResourceFormState = {
@@ -32,6 +36,7 @@ export async function createResource(
 ): Promise<ResourceFormState> {
   const profile = await requireRole("parent");
   const studentId = String(formData.get("student_id") ?? "").trim();
+  const grade = normalizeGradeValue(String(formData.get("grade") ?? ""));
   const subject = String(formData.get("subject") ?? "").trim();
   const topic = String(formData.get("topic") ?? "").trim();
   const source = String(formData.get("source") ?? "").trim();
@@ -42,15 +47,19 @@ export async function createResource(
     10
   );
 
-  if (!studentId || !subject || !topic || !source) {
+  if (!studentId || !grade || !subject || !topic || !source) {
     return {
       error:
-        "Lütfen öğrenci, kaynak adı, ders, konu, test no, sayfa no ve toplam soru sayısını girin.",
+        "Lütfen öğrenci, sınıf, kaynak adı, ders, konu, test no, sayfa no ve toplam soru sayısını girin.",
     };
   }
 
-  if (!(subject in SUBJECT_LABELS)) {
-    return { error: "Geçersiz ders seçimi." };
+  if (!getSubjectsForGrade(grade).includes(subject)) {
+    return { error: "Seçilen sınıf için geçersiz ders seçimi." };
+  }
+
+  if (!getTopicsForSubject(grade, subject).includes(topic)) {
+    return { error: "Seçilen sınıf ve ders için geçersiz konu seçimi." };
   }
 
   if (
@@ -86,6 +95,7 @@ export async function createResource(
   const { error: insertError } = await supabase.from("test_templates").insert({
     parent_id: profile.id,
     student_id: studentId,
+    grade,
     subject,
     topic,
     source,

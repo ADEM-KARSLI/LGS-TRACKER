@@ -14,6 +14,7 @@
     "db:migrate:008": "node scripts/apply-migration-008.mjs",
     "db:migrate:009": "node scripts/apply-migration-009.mjs",
     "db:migrate:010": "node scripts/apply-migration-010.mjs",
+    "db:migrate:011": "node scripts/apply-migration-011.mjs",
     "db:reset-parent-demo": "node scripts/reset-parent-demo-data.mjs",
     "db:reset": "node scripts/reset-database.mjs"
   },

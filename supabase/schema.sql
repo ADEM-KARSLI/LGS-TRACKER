@@ -76,6 +76,7 @@ create table if not exists public.test_templates (
   parent_id uuid not null references public.users (id) on delete cascade,
   student_id uuid not null references public.users (id) on delete cascade,
   source text not null,
+  grade text not null,
   subject text not null,
   topic text not null,
   test_no int not null check (test_no > 0),

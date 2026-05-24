@@ -9,7 +9,7 @@ export async function getStudentResources(
   const { data, error } = await supabase
     .from("test_templates")
     .select(
-      "id, parent_id, student_id, subject, topic, source, test_no, page_no, total_questions, created_at"
+      "id, parent_id, student_id, grade, subject, topic, source, test_no, page_no, total_questions, created_at"
     )
     .eq("student_id", studentId)
     .order("source", { ascending: true })
@@ -30,7 +30,7 @@ export async function getParentResources(parentId: string) {
   const { data: resources, error: resourceError } = await supabase
     .from("test_templates")
     .select(
-      "id, parent_id, student_id, subject, topic, source, test_no, page_no, total_questions, created_at"
+      "id, parent_id, student_id, grade, subject, topic, source, test_no, page_no, total_questions, created_at"
     )
     .in("student_id", studentIds)
     .order("source", { ascending: true })

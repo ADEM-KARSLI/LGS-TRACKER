@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   createResource,
   deleteResource,
@@ -9,18 +9,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { SUBJECT_LABELS } from "@/lib/lgs-curriculum";
+import {
+  formatGradeLabel,
+  GRADE_OPTIONS,
+  getSubjectsForGrade,
+  getTopicsForSubject,
+  normalizeGradeValue,
+  SUBJECT_LABELS,
+} from "@/lib/lgs-curriculum";
+import { useActionState } from "react";
 
 type Student = {
   id: string;
   name: string;
   email: string;
+  grade?: string | null;
 };
 
 type ResourceRow = {
   id: string;
   parent_id: string;
   student_id: string;
+  grade: string;
   subject: string;
   topic: string;
   source: string;
@@ -39,19 +49,59 @@ export function ResourceManager({
   students: Student[];
   resources: ResourceRow[];
 }) {
+  const initialGrade = normalizeGradeValue(students[0]?.grade);
   const [selectedStudent, setSelectedStudent] = useState(students[0]?.id ?? "");
+  const [selectedGrade, setSelectedGrade] = useState(initialGrade);
   const [selectedSubject, setSelectedSubject] = useState(
-    Object.keys(SUBJECT_LABELS)[0] ?? ""
+    getSubjectsForGrade(initialGrade)[0] ?? ""
+  );
+  const [selectedTopic, setSelectedTopic] = useState(
+    getTopicsForSubject(initialGrade, getSubjectsForGrade(initialGrade)[0] ?? "")[0] ?? ""
   );
   const [state, formAction, isPending] = useActionState(
     createResource,
     initialState
   );
 
-  const subjectOptions = Object.keys(SUBJECT_LABELS).map((subject) => ({
-    value: subject,
-    label: SUBJECT_LABELS[subject] ?? subject,
-  }));
+  function handleStudentChange(studentId: string) {
+    setSelectedStudent(studentId);
+    const student = students.find((item) => item.id === studentId);
+    const nextGrade = normalizeGradeValue(student?.grade);
+    const nextSubject = getSubjectsForGrade(nextGrade)[0] ?? "";
+    setSelectedGrade(nextGrade);
+    setSelectedSubject(nextSubject);
+    setSelectedTopic(getTopicsForSubject(nextGrade, nextSubject)[0] ?? "");
+  }
+
+  function handleGradeChange(grade: string) {
+    const nextSubject = getSubjectsForGrade(grade)[0] ?? "";
+    setSelectedGrade(grade);
+    setSelectedSubject(nextSubject);
+    setSelectedTopic(getTopicsForSubject(grade, nextSubject)[0] ?? "");
+  }
+
+  function handleSubjectChange(subject: string) {
+    setSelectedSubject(subject);
+    setSelectedTopic(getTopicsForSubject(selectedGrade, subject)[0] ?? "");
+  }
+
+  const subjectOptions = useMemo(
+    () =>
+      getSubjectsForGrade(selectedGrade).map((subject) => ({
+        value: subject,
+        label: SUBJECT_LABELS[subject] ?? subject,
+      })),
+    [selectedGrade]
+  );
+
+  const topicOptions = useMemo(
+    () =>
+      getTopicsForSubject(selectedGrade, selectedSubject).map((topic) => ({
+        value: topic,
+        label: topic,
+      })),
+    [selectedGrade, selectedSubject]
+  );
 
   if (students.length === 0) {
     return (
@@ -87,30 +137,38 @@ export function ResourceManager({
               name="student_id"
               label="Öğrenci"
               value={selectedStudent}
-              onChange={(event) => setSelectedStudent(event.target.value)}
+              onChange={(event) => handleStudentChange(event.target.value)}
               options={students.map((student) => ({
                 value: student.id,
                 label: `${student.name} (${student.email})`,
               }))}
+            />
+            <Select
+              name="grade"
+              label="Sınıf"
+              value={selectedGrade}
+              onChange={(event) => handleGradeChange(event.target.value)}
+              options={GRADE_OPTIONS}
+            />
+            <Select
+              name="subject"
+              label="Ders"
+              value={selectedSubject}
+              onChange={(event) => handleSubjectChange(event.target.value)}
+              options={subjectOptions}
+            />
+            <Select
+              name="topic"
+              label="Konu"
+              value={selectedTopic}
+              onChange={(event) => setSelectedTopic(event.target.value)}
+              options={topicOptions}
             />
             <Input
               name="source"
               label="Kaynak Adı"
               required
               placeholder="Örn: Karekök Matematik"
-            />
-            <Select
-              name="subject"
-              label="Ders"
-              value={selectedSubject}
-              onChange={(event) => setSelectedSubject(event.target.value)}
-              options={subjectOptions}
-            />
-            <Input
-              name="topic"
-              label="Konu"
-              required
-              placeholder="Örn: Rasyonel Sayılar"
             />
             <Input name="test_no" label="Test No" type="number" min={1} required />
             <Input name="page_no" label="Sayfa No" type="number" min={1} required />
@@ -170,13 +228,21 @@ export function ResourceManager({
                         key={resource.id}
                         className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
                       >
-                        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
+                        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-7">
                           <div>
                             <p className="text-xs uppercase tracking-wide text-slate-500">
                               Kaynak
                             </p>
                             <p className="font-medium text-slate-900 dark:text-white">
                               {resource.source}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-slate-500">
+                              Sınıf
+                            </p>
+                            <p className="font-medium text-slate-900 dark:text-white">
+                              {formatGradeLabel(resource.grade)}
                             </p>
                           </div>
                           <div>
@@ -241,8 +307,8 @@ export function ResourceManager({
           Not
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Öğrenci test ekranında kaynak adı ve sayfa numarası seçer. Ders, konu,
-          test no ve toplam soru bilgileri bu şablondan otomatik gelir.
+          Şablon eklerken sınıf ve ders seçimine göre konu listesi otomatik gelir.
+          7. sınıf ve 8. sınıf için tanımlı konular sistemde hazırdır.
         </p>
       </section>
     </div>

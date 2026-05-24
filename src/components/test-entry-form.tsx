@@ -17,6 +17,7 @@ const initialState: TestFormState = {};
 type TestTemplate = {
   id: string;
   source: string;
+  grade: string;
   subject: string;
   topic: string;
   test_no: number;

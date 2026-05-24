@@ -9,7 +9,7 @@ export default async function NewTestPage() {
 
   const { data: templateRows } = await supabase
     .from("test_templates")
-    .select("id, source, subject, topic, test_no, page_no, total_questions")
+    .select("id, source, grade, subject, topic, test_no, page_no, total_questions")
     .eq("student_id", profile.id)
     .order("source", { ascending: true })
     .order("page_no", { ascending: true });
@@ -25,6 +25,7 @@ export default async function NewTestPage() {
           (templateRows ?? []) as {
             id: string;
             source: string;
+            grade: string;
             subject: string;
             topic: string;
             test_no: number;
