@@ -37,6 +37,7 @@ export async function createTest(
   const topic = String(formData.get("topic") ?? "").trim();
   const source = String(formData.get("source") ?? "").trim();
   const testNo = parseInt(String(formData.get("test_no") ?? ""), 10);
+  const pageNo = parseInt(String(formData.get("page_no") ?? ""), 10);
   const totalQuestions = parseInt(String(formData.get("total_questions") ?? ""), 10);
   const wrongRaw = String(formData.get("wrong_questions") ?? "").trim();
 
@@ -46,11 +47,13 @@ export async function createTest(
 
   if (
     Number.isNaN(testNo) ||
+    Number.isNaN(pageNo) ||
     Number.isNaN(totalQuestions) ||
     testNo < 1 ||
+    pageNo < 1 ||
     totalQuestions < 1
   ) {
-    return { error: "Test no ve toplam soru sayısını kontrol edin." };
+    return { error: "Test no, sayfa no ve toplam soru sayısını kontrol edin." };
   }
 
   let wrongQuestions: number[];
@@ -70,6 +73,7 @@ export async function createTest(
       topic,
       source,
       test_no: testNo,
+      page_no: pageNo,
       total_questions: totalQuestions,
       correct_count: correctCount,
     })

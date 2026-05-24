@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import {
   DEFAULT_GRADE,
-  getSubjectsForGrade,
   getTopicsForSubject,
   normalizeGradeValue,
   SUBJECT_LABELS,
@@ -25,6 +24,7 @@ type ResourceOption = {
   id: string;
   source: string;
   grade: string;
+  subject: string;
 };
 
 type SourceOption = {
@@ -32,11 +32,8 @@ type SourceOption = {
   label: string;
   source: string;
   grade: string;
+  subject: string;
 };
-
-function uniqueValues(values: string[]) {
-  return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
-}
 
 function topicOptions(topics: readonly string[]) {
   return [
@@ -49,11 +46,9 @@ function topicOptions(topics: readonly string[]) {
 }
 
 export function TestEntryForm({
-  existingSources,
   defaultGrade,
   studentResources,
 }: {
-  existingSources: string[];
   defaultGrade: string;
   studentResources: ResourceOption[];
 }) {
@@ -61,28 +56,15 @@ export function TestEntryForm({
   const [totalQuestions, setTotalQuestions] = useState(15);
   const [wrongSet, setWrongSet] = useState<Set<number>>(new Set());
 
-  const normalizedDefaultGrade = normalizeGradeValue(defaultGrade);
-  const hasResources = studentResources.length > 0;
-
   const sourceOptions = useMemo<SourceOption[]>(() => {
-    if (hasResources) {
-      return studentResources.map((resource) => ({
-        value: `resource:${resource.id}`,
-        label: resource.source,
-        source: resource.source,
-        grade: normalizeGradeValue(resource.grade),
-      }));
-    }
-
-    return [
-      ...uniqueValues(existingSources).map((source) => ({
-        value: source,
-        label: source,
-        source,
-        grade: normalizedDefaultGrade,
-      })),
-    ];
-  }, [existingSources, hasResources, normalizedDefaultGrade, studentResources]);
+    return studentResources.map((resource) => ({
+      value: `resource:${resource.id}`,
+      label: `${resource.source} · ${SUBJECT_LABELS[resource.subject] ?? resource.subject}`,
+      source: resource.source,
+      grade: normalizeGradeValue(resource.grade),
+      subject: resource.subject,
+    }));
+  }, [studentResources]);
 
   const [selectedSource, setSelectedSource] = useState(
     sourceOptions[0]?.value ?? ""
@@ -90,43 +72,21 @@ export function TestEntryForm({
 
   const selectedSourceOption =
     sourceOptions.find((option) => option.value === selectedSource) ?? sourceOptions[0];
-  const selectedGrade = selectedSourceOption?.grade ?? DEFAULT_GRADE;
+  const selectedGrade =
+    selectedSourceOption?.grade ?? normalizeGradeValue(defaultGrade) ?? DEFAULT_GRADE;
   const resolvedSource = selectedSourceOption?.source ?? "";
+  const resolvedSubject = selectedSourceOption?.subject ?? "";
   const hasSelectableSources = sourceOptions.length > 0;
 
-  const subjectOptions = useMemo(
-    () =>
-      getSubjectsForGrade(selectedGrade).map((subject) => ({
-        value: subject,
-        label: SUBJECT_LABELS[subject] ?? subject,
-      })),
-    [selectedGrade]
-  );
-
-  const [subject, setSubject] = useState(subjectOptions[0]?.value ?? "");
   const [topic, setTopic] = useState(GENERAL_TOPIC);
-  const selectedSubject =
-    subjectOptions.find((option) => option.value === subject)?.value ??
-    subjectOptions[0]?.value ??
-    "";
 
   const topics = useMemo(
-    () => getTopicsForSubject(selectedGrade, selectedSubject),
-    [selectedGrade, selectedSubject]
+    () => getTopicsForSubject(selectedGrade, resolvedSubject),
+    [selectedGrade, resolvedSubject]
   );
 
   function handleSourceChange(nextSource: string) {
     setSelectedSource(nextSource);
-    const nextOption =
-      sourceOptions.find((option) => option.value === nextSource) ?? sourceOptions[0];
-    const nextGrade = nextOption?.grade ?? normalizedDefaultGrade;
-    const nextSubject = getSubjectsForGrade(nextGrade)[0] ?? "";
-    setSubject(nextSubject);
-    setTopic(GENERAL_TOPIC);
-  }
-
-  function handleSubjectChange(nextSubject: string) {
-    setSubject(nextSubject);
     setTopic(GENERAL_TOPIC);
   }
 
@@ -152,6 +112,7 @@ export function TestEntryForm({
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="wrong_questions" value={wrongQuestionsValue} />
       <input type="hidden" name="source" value={resolvedSource} />
+      <input type="hidden" name="subject" value={resolvedSubject} />
 
       {state.error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
@@ -177,12 +138,18 @@ export function TestEntryForm({
           disabled={!hasSelectableSources}
         />
         <Select
-          name="subject"
           label="Ders"
-          required
-          value={selectedSubject}
-          onChange={(event) => handleSubjectChange(event.target.value)}
-          options={subjectOptions}
+          value={resolvedSubject}
+          options={
+            resolvedSubject
+              ? [
+                  {
+                    value: resolvedSubject,
+                    label: SUBJECT_LABELS[resolvedSubject] ?? resolvedSubject,
+                  },
+                ]
+              : []
+          }
           disabled={!hasSelectableSources}
         />
         <Select
@@ -195,6 +162,7 @@ export function TestEntryForm({
           disabled={!hasSelectableSources}
         />
         <Input name="test_no" label="Test No" type="number" min={1} required />
+        <Input name="page_no" label="Sayfa No" type="number" min={1} required />
         <Input
           name="total_questions"
           label="Toplam Soru"

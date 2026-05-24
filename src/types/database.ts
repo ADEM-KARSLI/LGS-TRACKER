@@ -50,6 +50,7 @@ export interface TestRecord {
   topic: string;
   source: string;
   test_no: number;
+  page_no?: number | null;
   total_questions: number;
   correct_count: number;
   created_at: string;
@@ -73,6 +74,7 @@ export interface StudyResource {
   parent_id: string;
   student_id: string;
   grade: string;
+  subject: string;
   source: string;
   created_at: string;
 }

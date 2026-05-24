@@ -2,7 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
-import { normalizeGradeValue } from "@/lib/lgs-curriculum";
+import {
+  getSubjectsForGrade,
+  normalizeGradeValue,
+} from "@/lib/lgs-curriculum";
 import { revalidatePath } from "next/cache";
 
 export type ResourceFormState = {
@@ -27,8 +30,12 @@ function resourceErrorMessage(message: string, code?: string) {
     return "study_resources tablosunda grade kolonu eksik görünüyor. 008 migration'ını çalıştırın.";
   }
 
-  if (message.includes("subject") || message.includes("topic")) {
-    return "Kaynak tablosu eski kolonları bekliyor. subject/topic bağımlılığı temizlenmeli.";
+  if (message.includes("subject")) {
+    return "study_resources tablosunda subject kolonu eksik görünüyor. 009 migration'ını çalıştırın.";
+  }
+
+  if (message.includes("topic")) {
+    return "Kaynak tablosu eski topic kolonunu bekliyor görünüyor. Şema güncellemesini kontrol edin.";
   }
 
   return code ? `${message} (${code})` : message;
@@ -41,10 +48,15 @@ export async function createResource(
   const profile = await requireRole("parent");
   const studentId = String(formData.get("student_id") ?? "").trim();
   const grade = normalizeGradeValue(String(formData.get("grade") ?? ""));
+  const subject = String(formData.get("subject") ?? "").trim();
   const source = String(formData.get("source") ?? "").trim();
 
-  if (!studentId || !grade || !source) {
-    return { error: "Lütfen öğrenci, sınıf ve kaynak adını girin." };
+  if (!studentId || !grade || !subject || !source) {
+    return { error: "Lütfen öğrenci, sınıf, ders ve kaynak adını girin." };
+  }
+
+  if (!getSubjectsForGrade(grade).includes(subject)) {
+    return { error: "Seçilen sınıf için geçersiz ders seçimi." };
   }
 
   const supabase = await createClient();
@@ -70,6 +82,7 @@ export async function createResource(
     parent_id: profile.id,
     student_id: studentId,
     grade,
+    subject,
     source,
   });
 

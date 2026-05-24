@@ -12,7 +12,9 @@ import { Select } from "@/components/ui/select";
 import {
   formatGradeLabel,
   GRADE_OPTIONS,
+  getSubjectsForGrade,
   normalizeGradeValue,
+  SUBJECT_LABELS,
 } from "@/lib/lgs-curriculum";
 
 type Student = {
@@ -27,6 +29,7 @@ type ResourceRow = {
   parent_id: string;
   student_id: string;
   grade: string;
+  subject: string;
   source: string;
   created_at: string;
 };
@@ -44,6 +47,9 @@ export function ResourceManager({
   const [selectedGrade, setSelectedGrade] = useState(
     normalizeGradeValue(students[0]?.grade)
   );
+  const [selectedSubject, setSelectedSubject] = useState(
+    getSubjectsForGrade(normalizeGradeValue(students[0]?.grade))[0] ?? ""
+  );
   const [state, formAction, isPending] = useActionState(
     createResource,
     initialState
@@ -52,8 +58,20 @@ export function ResourceManager({
   function handleStudentChange(studentId: string) {
     setSelectedStudent(studentId);
     const student = students.find((item) => item.id === studentId);
-    setSelectedGrade(normalizeGradeValue(student?.grade));
+    const nextGrade = normalizeGradeValue(student?.grade);
+    setSelectedGrade(nextGrade);
+    setSelectedSubject(getSubjectsForGrade(nextGrade)[0] ?? "");
   }
+
+  function handleGradeChange(grade: string) {
+    setSelectedGrade(grade);
+    setSelectedSubject(getSubjectsForGrade(grade)[0] ?? "");
+  }
+
+  const subjectOptions = getSubjectsForGrade(selectedGrade).map((subject) => ({
+    value: subject,
+    label: SUBJECT_LABELS[subject] ?? subject,
+  }));
 
   if (students.length === 0) {
     return (
@@ -84,7 +102,7 @@ export function ResourceManager({
         )}
 
         <form action={formAction} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Select
               name="student_id"
               label="Öğrenci"
@@ -99,8 +117,15 @@ export function ResourceManager({
               name="grade"
               label="Sınıf"
               value={selectedGrade}
-              onChange={(event) => setSelectedGrade(event.target.value)}
+              onChange={(event) => handleGradeChange(event.target.value)}
               options={GRADE_OPTIONS}
+            />
+            <Select
+              name="subject"
+              label="Ders"
+              value={selectedSubject}
+              onChange={(event) => setSelectedSubject(event.target.value)}
+              options={subjectOptions}
             />
             <Input
               name="source"
@@ -157,7 +182,7 @@ export function ResourceManager({
                         key={resource.id}
                         className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
                       >
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="grid gap-3 sm:grid-cols-3">
                           <div>
                             <p className="text-xs uppercase tracking-wide text-slate-500">
                               Kaynak
@@ -172,6 +197,14 @@ export function ResourceManager({
                             </p>
                             <p className="font-medium text-slate-900 dark:text-white">
                               {formatGradeLabel(resource.grade)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-slate-500">
+                              Ders
+                            </p>
+                            <p className="font-medium text-slate-900 dark:text-white">
+                              {SUBJECT_LABELS[resource.subject] ?? resource.subject}
                             </p>
                           </div>
                         </div>
@@ -197,7 +230,8 @@ export function ResourceManager({
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           Öğrencinin test ekleme ekranında sadece kendisine eşlenen kaynaklar
-          görünür ve seçilen kaynağın sınıfına göre ders ile konu listesi değişir.
+          görünür. Kaynak seçildiğinde ders otomatik gelir; konu listesi de
+          kaynağın sınıfına göre filtrelenir.
         </p>
       </section>
     </div>

@@ -42,6 +42,7 @@ create table if not exists public.test_records (
   topic text not null,
   source text not null,
   test_no int not null check (test_no > 0),
+  page_no int check (page_no > 0),
   total_questions int not null check (total_questions > 0),
   correct_count int not null check (correct_count >= 0),
   created_at timestamptz not null default now()
@@ -64,9 +65,10 @@ create table if not exists public.study_resources (
   parent_id uuid not null references public.users (id) on delete cascade,
   student_id uuid not null references public.users (id) on delete cascade,
   grade text not null,
+  subject text not null,
   source text not null,
   created_at timestamptz not null default now(),
-  unique (parent_id, student_id, grade, source)
+  unique (parent_id, student_id, grade, subject, source)
 );
 
 create index if not exists idx_study_resources_student on public.study_resources (student_id, created_at desc);

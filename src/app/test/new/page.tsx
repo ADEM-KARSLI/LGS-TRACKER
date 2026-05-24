@@ -8,21 +8,11 @@ export default async function NewTestPage() {
   const profile = await requireRole("student");
   const supabase = await createClient();
 
-  const { data: sourceRows } = await supabase
-    .from("test_records")
-    .select("source")
-    .eq("student_id", profile.id)
-    .order("created_at", { ascending: false });
-
   const { data: resourceRows } = await supabase
     .from("study_resources")
-    .select("id, source, grade")
+    .select("id, source, grade, subject")
     .eq("student_id", profile.id)
     .order("created_at", { ascending: false });
-
-  const sources = Array.from(
-    new Set((sourceRows ?? []).map((row) => row.source.trim()).filter(Boolean))
-  );
 
   return (
     <AppShell role="student" title="Yeni Test" userName={profile.name}>
@@ -30,10 +20,14 @@ export default async function NewTestPage() {
         Test bilgilerini girin ve yanlış yaptığınız soru numaralarını ekleyin.
       </p>
       <TestEntryForm
-        existingSources={sources}
         defaultGrade={normalizeGradeValue(profile.grade)}
         studentResources={
-          (resourceRows ?? []) as { id: string; source: string; grade: string }[]
+          (resourceRows ?? []) as {
+            id: string;
+            source: string;
+            grade: string;
+            subject: string;
+          }[]
         }
       />
     </AppShell>
