@@ -15,11 +15,11 @@ function parseWrongQuestions(raw: string, totalQuestions: number): number[] {
 
   const numbers = raw
     .split(/[,;\s]+/)
-    .map((s) => s.trim())
+    .map((value) => value.trim())
     .filter(Boolean)
-    .map((s) => parseInt(s, 10));
+    .map((value) => parseInt(value, 10));
 
-  if (numbers.some((n) => Number.isNaN(n) || n < 1 || n > totalQuestions)) {
+  if (numbers.some((value) => Number.isNaN(value) || value < 1 || value > totalQuestions)) {
     throw new Error(`Soru numaraları 1 ile ${totalQuestions} arasında olmalıdır.`);
   }
 
@@ -33,48 +33,55 @@ export async function createTest(
   const profile = await requireRole("student");
   const supabase = await createClient();
 
-  const subject = String(formData.get("subject") ?? "").trim();
-  const topic = String(formData.get("topic") ?? "").trim();
   const source = String(formData.get("source") ?? "").trim();
-  const testNo = parseInt(String(formData.get("test_no") ?? ""), 10);
   const pageNo = parseInt(String(formData.get("page_no") ?? ""), 10);
-  const totalQuestions = parseInt(String(formData.get("total_questions") ?? ""), 10);
   const wrongRaw = String(formData.get("wrong_questions") ?? "").trim();
 
-  if (!subject || !topic || !source) {
-    return { error: "Ders, konu ve kaynak zorunludur." };
+  if (!source) {
+    return { error: "Kaynak zorunludur." };
   }
 
-  if (
-    Number.isNaN(testNo) ||
-    Number.isNaN(pageNo) ||
-    Number.isNaN(totalQuestions) ||
-    testNo < 1 ||
-    pageNo < 1 ||
-    totalQuestions < 1
-  ) {
-    return { error: "Test no, sayfa no ve toplam soru sayısını kontrol edin." };
+  if (Number.isNaN(pageNo) || pageNo < 1) {
+    return { error: "Sayfa numarasını kontrol edin." };
+  }
+
+  const { data: template, error: templateError } = await supabase
+    .from("test_templates")
+    .select("subject, topic, test_no, total_questions")
+    .eq("student_id", profile.id)
+    .eq("source", source)
+    .eq("page_no", pageNo)
+    .maybeSingle();
+
+  if (templateError) {
+    return { error: templateError.message };
+  }
+
+  if (!template) {
+    return { error: "Seçilen kaynak ve sayfa numarası için kayıtlı test bulunamadı." };
   }
 
   let wrongQuestions: number[];
   try {
-    wrongQuestions = parseWrongQuestions(wrongRaw, totalQuestions);
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : "Soru matrisi geçersiz." };
+    wrongQuestions = parseWrongQuestions(wrongRaw, template.total_questions);
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Soru matrisi geçersiz.",
+    };
   }
 
-  const correctCount = totalQuestions - wrongQuestions.length;
+  const correctCount = template.total_questions - wrongQuestions.length;
 
   const { data: testRecord, error: testError } = await supabase
     .from("test_records")
     .insert({
       student_id: profile.id,
-      subject,
-      topic,
+      subject: template.subject,
+      topic: template.topic,
       source,
-      test_no: testNo,
+      test_no: template.test_no,
       page_no: pageNo,
-      total_questions: totalQuestions,
+      total_questions: template.total_questions,
       correct_count: correctCount,
     })
     .select("id")
@@ -86,9 +93,9 @@ export async function createTest(
 
   if (wrongQuestions.length > 0) {
     const { error: weakError } = await supabase.from("weak_questions").insert(
-      wrongQuestions.map((question_no) => ({
+      wrongQuestions.map((questionNo) => ({
         test_id: testRecord.id,
-        question_no,
+        question_no: questionNo,
         status: "pending" as const,
       }))
     );

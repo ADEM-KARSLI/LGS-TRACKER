@@ -73,9 +73,12 @@ export interface StudyResource {
   id: string;
   parent_id: string;
   student_id: string;
-  grade: string;
   subject: string;
+  topic: string;
   source: string;
+  test_no: number;
+  page_no: number;
+  total_questions: number;
   created_at: string;
 }
 

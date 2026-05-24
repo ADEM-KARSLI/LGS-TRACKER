@@ -2,10 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
-import {
-  getSubjectsForGrade,
-  normalizeGradeValue,
-} from "@/lib/lgs-curriculum";
+import { SUBJECT_LABELS } from "@/lib/lgs-curriculum";
 import { revalidatePath } from "next/cache";
 
 export type ResourceFormState = {
@@ -15,27 +12,15 @@ export type ResourceFormState = {
 
 function resourceErrorMessage(message: string, code?: string) {
   if (message.includes("duplicate key") || message.includes("unique")) {
-    return "Bu kaynak bu öğrenci için zaten eklenmiş.";
+    return "Bu kaynak ve sayfa numarası bu öğrenci için zaten eklenmiş.";
   }
 
   if (message.includes("row-level security")) {
-    return `Kaynak ekleme yetkisi Supabase policy tarafından reddedildi${code ? ` (${code})` : ""}. Veritabanı kaynak policy migration'ını çalıştırın.`;
+    return `Test şablonu ekleme yetkisi Supabase policy tarafından reddedildi${code ? ` (${code})` : ""}. Veritabanı migration'ını çalıştırın.`;
   }
 
-  if (message.includes("parent_id")) {
-    return "study_resources tablosunda parent_id kolonu veya ilişkili policy eksik görünüyor.";
-  }
-
-  if (message.includes("grade")) {
-    return "study_resources tablosunda grade kolonu eksik görünüyor. 008 migration'ını çalıştırın.";
-  }
-
-  if (message.includes("subject")) {
-    return "study_resources tablosunda subject kolonu eksik görünüyor. 009 migration'ını çalıştırın.";
-  }
-
-  if (message.includes("topic")) {
-    return "Kaynak tablosu eski topic kolonunu bekliyor görünüyor. Şema güncellemesini kontrol edin.";
+  if (message.includes("test_templates")) {
+    return "test_templates tablosu eksik görünüyor. 010 migration'ını çalıştırın.";
   }
 
   return code ? `${message} (${code})` : message;
@@ -47,16 +32,36 @@ export async function createResource(
 ): Promise<ResourceFormState> {
   const profile = await requireRole("parent");
   const studentId = String(formData.get("student_id") ?? "").trim();
-  const grade = normalizeGradeValue(String(formData.get("grade") ?? ""));
   const subject = String(formData.get("subject") ?? "").trim();
+  const topic = String(formData.get("topic") ?? "").trim();
   const source = String(formData.get("source") ?? "").trim();
+  const testNo = parseInt(String(formData.get("test_no") ?? ""), 10);
+  const pageNo = parseInt(String(formData.get("page_no") ?? ""), 10);
+  const totalQuestions = parseInt(
+    String(formData.get("total_questions") ?? ""),
+    10
+  );
 
-  if (!studentId || !grade || !subject || !source) {
-    return { error: "Lütfen öğrenci, sınıf, ders ve kaynak adını girin." };
+  if (!studentId || !subject || !topic || !source) {
+    return {
+      error:
+        "Lütfen öğrenci, kaynak adı, ders, konu, test no, sayfa no ve toplam soru sayısını girin.",
+    };
   }
 
-  if (!getSubjectsForGrade(grade).includes(subject)) {
-    return { error: "Seçilen sınıf için geçersiz ders seçimi." };
+  if (!(subject in SUBJECT_LABELS)) {
+    return { error: "Geçersiz ders seçimi." };
+  }
+
+  if (
+    Number.isNaN(testNo) ||
+    Number.isNaN(pageNo) ||
+    Number.isNaN(totalQuestions) ||
+    testNo < 1 ||
+    pageNo < 1 ||
+    totalQuestions < 1
+  ) {
+    return { error: "Test no, sayfa no ve toplam soru sayısını kontrol edin." };
   }
 
   const supabase = await createClient();
@@ -78,12 +83,15 @@ export async function createResource(
     return { error: "Geçersiz öğrenci seçimi." };
   }
 
-  const { error: insertError } = await supabase.from("study_resources").insert({
+  const { error: insertError } = await supabase.from("test_templates").insert({
     parent_id: profile.id,
     student_id: studentId,
-    grade,
     subject,
+    topic,
     source,
+    test_no: testNo,
+    page_no: pageNo,
+    total_questions: totalQuestions,
   });
 
   if (insertError) {
@@ -95,7 +103,7 @@ export async function createResource(
   revalidatePath("/parent/resources");
   revalidatePath("/test/new");
 
-  return { success: "Kaynak eklendi." };
+  return { success: "Test şablonu eklendi." };
 }
 
 export async function deleteResource(formData: FormData) {
@@ -103,12 +111,12 @@ export async function deleteResource(formData: FormData) {
   const resourceId = String(formData.get("resource_id") ?? "").trim();
 
   if (!resourceId) {
-    throw new Error("Silinecek kaynak bulunamadı.");
+    throw new Error("Silinecek kayıt bulunamadı.");
   }
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from("study_resources")
+    .from("test_templates")
     .delete()
     .eq("id", resourceId)
     .eq("parent_id", profile.id);
