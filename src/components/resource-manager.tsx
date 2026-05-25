@@ -143,6 +143,12 @@ export function ResourceManager({
                 label: `${student.name} (${student.email})`,
               }))}
             />
+            <Input
+              name="source"
+              label="Kaynak Adı"
+              required
+              placeholder="Örn: Karekök Matematik"
+            />
             <Select
               name="grade"
               label="Sınıf"
@@ -163,12 +169,6 @@ export function ResourceManager({
               value={selectedTopic}
               onChange={(event) => setSelectedTopic(event.target.value)}
               options={topicOptions}
-            />
-            <Input
-              name="source"
-              label="Kaynak Adı"
-              required
-              placeholder="Örn: Karekök Matematik"
             />
             <Input name="test_no" label="Test No" type="number" min={1} required />
             <Input name="page_no" label="Sayfa No" type="number" min={1} required />
