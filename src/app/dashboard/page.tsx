@@ -109,7 +109,7 @@ export default async function DashboardPage({
 
       <div className="mb-8 flex flex-wrap gap-3">
         <Link href="/test/new">
-          <Button>➕ Test Ekle</Button>
+          <Button>➕ Test Çözdüm</Button>
         </Link>
         <Link href="/pending">
           <Button variant="secondary">🟡 Bekleyen Sorular</Button>

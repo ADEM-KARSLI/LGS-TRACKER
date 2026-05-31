@@ -19,7 +19,7 @@ export function AppShell({
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-indigo-600">
-              LGS Hata Takip
+              LGS Yolculuğum
             </p>
             <h1 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h1>
             <p className="text-sm text-slate-500">Merhaba, {userName}</p>
